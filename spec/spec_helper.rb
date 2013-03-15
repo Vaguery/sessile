@@ -1,1 +1,1 @@
-require_relative "../lib/sessile"
+require_relative "../lib/snip"
