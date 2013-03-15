@@ -2,13 +2,9 @@ require 'spec_helper'
 
 describe "SnipLanguage" do
   describe "Answer" do
-    before(:each) do
-      @three_token_script = "x_12 x_3 x_22"
-    end
-
     it "should take a script as an initialization argument, with default to empty string" do
       Snip::Answer.new.script.should == ""
-      Snip::Answer.new(@three_token_script).script.should == @three_token_script
+      Snip::Answer.new("x_12 x_3 x_22").script.should == "x_12 x_3 x_22"
     end
   end
 
