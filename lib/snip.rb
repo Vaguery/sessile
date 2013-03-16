@@ -16,7 +16,10 @@ module Snip
       answer.scores[:generic] = nil
     end
 
+    
     def self.median(numbers)
+      raise ArgumentError.new("no nil values in median calculation") if numbers.include?(nil)
+      raise ArgumentError.new("median cannot be calculated for an empty list") if numbers.compact.empty?
       sorted = numbers.compact.sort
       count = sorted.length
       result = case 
@@ -30,13 +33,14 @@ module Snip
       return result
     end
   end
-
-
+  
+  
   class BalancedAccuracyEvaluator < Evaluator
     attr_reader :data
     attr_reader :positive_examples
     attr_reader :negative_examples
-
+    
+    
     def initialize(data)
       data.each do |r|
         raise ArgumentError.new("A record has no :group assigned") if r[:group].nil?
@@ -46,8 +50,53 @@ module Snip
       @data = data
       @positive_examples, @negative_examples = @data.partition {|r| r[:group] == 1}
     end
+    
+    
+    def run_examples(answer,rows)
+      rows.collect do |row|
+        Snip::Interpreter.new(script:answer.script, bindings:row).run.emit!
+      end
+    end
+    
+    
+    def apply_threshold_to_predictions(numbers,threshold)
+      numbers.collect {|num| num <= threshold ? 0 : 1 }
+    end
+    
+    
+    def balanced_accuracy(predicted_positives, predicted_negatives)
+      false_positives = predicted_negatives.count(1).to_f
+      false_negatives = predicted_positives.count(0).to_f
+      true_positives = predicted_positives.count(1).to_f
+      true_negatives = predicted_negatives.count(0).to_f
+      
+      sensitivity = true_positives / (true_positives + false_negatives)
+      specificity = true_negatives / (true_negatives + false_positives)
+      
+      return (sensitivity + specificity) / 2
+    end
+
 
     def evaluate(answer)
+      pos_values = run_examples(answer,@positive_examples)
+      neg_values = run_examples(answer,@negative_examples)
+
+      all_values = pos_values + neg_values
+      if all_values.include?(nil) || pos_values.empty? || neg_values.empty?
+        answer.scores[:balanced_accuracy_cutoff] = nil
+        answer.scores[:balanced_accuracy] = nil
+      else
+        pos_median = Snip::Evaluator.median(pos_values)
+        neg_median = Snip::Evaluator.median(neg_values)
+        threshold = (neg_median + pos_median) / 2
+
+        predicted_positives = apply_threshold_to_predictions(pos_values, threshold)
+        predicted_negatives = apply_threshold_to_predictions(neg_values, threshold)
+
+        answer.scores[:balanced_accuracy_cutoff] = threshold
+        answer.scores[:balanced_accuracy] = balanced_accuracy(predicted_positives, predicted_negatives)
+      end
+      return answer
     end
   end
 
@@ -87,6 +136,7 @@ module Snip
       end
       return self
     end
+
 
     def emit!
       return @stack.pop
@@ -128,9 +178,6 @@ module Snip
         end
         @stack.push result
       end
-
     end
-    
   end
-
 end

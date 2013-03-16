@@ -8,6 +8,7 @@ describe "SnipLanguage" do
     end
   end
 
+
   describe "Interpreter" do
     describe "initialization" do
       it "should have an empty stack" do
@@ -28,6 +29,7 @@ describe "SnipLanguage" do
       end
     end
   end
+
 
   describe "run" do
     it "should take one step for every space-delimited token in the script" do
@@ -75,6 +77,7 @@ describe "SnipLanguage" do
           Snip::Interpreter.new(script:"+ 2 3").run.stack.should == [2.0, 3.0]
         end
       end
+
       
       describe "-" do
         it "should pop two arguments and replace them with their difference" do
@@ -87,6 +90,7 @@ describe "SnipLanguage" do
         end
       end
 
+
       describe "*" do
         it "should pop two arguments and replace them with their product" do
           Snip::Interpreter.new(script:"1 -2 4 *").run.stack.should == [1,-8]
@@ -97,6 +101,7 @@ describe "SnipLanguage" do
           Snip::Interpreter.new(script:"* 2 3").run.stack.should == [2.0, 3.0]
         end
       end
+
 
       describe "/" do
         it "should pop two arguments and replace them with their quotient" do
@@ -114,6 +119,7 @@ describe "SnipLanguage" do
       end
     end
 
+
     describe "comparisons" do
       describe "==" do
         it "should pop two arguments and replace them with a pseudoboolean indicating equality" do
@@ -127,6 +133,7 @@ describe "SnipLanguage" do
         end
       end
 
+
       describe "<" do
         it "should pop two arguments and replace them with a pseudoboolean indicating a < b" do
           Snip::Interpreter.new(script:"1 2 3 <").run.stack.should == [1,1.0]
@@ -134,11 +141,13 @@ describe "SnipLanguage" do
           Snip::Interpreter.new(script:"1 3 2 <").run.stack.should == [1,0.0]
         end
 
+
         it "should fail if there aren't enough items on the stack" do
           Snip::Interpreter.new(script:"1 <").run.stack.should == [1.0]
           Snip::Interpreter.new(script:"< 2 3").run.stack.should == [2.0, 3.0]
         end
       end
+
 
       describe ">" do
         it "should pop two arguments and replace them with a pseudoboolean indicating a < b" do
@@ -153,6 +162,7 @@ describe "SnipLanguage" do
         end
       end
 
+
       describe ">=" do
         it "should pop two arguments and replace them with a pseudoboolean indicating a < b" do
           Snip::Interpreter.new(script:"1 2 3 >=").run.stack.should == [1,0.0]
@@ -165,6 +175,7 @@ describe "SnipLanguage" do
           Snip::Interpreter.new(script:">= 2 3").run.stack.should == [2.0, 3.0]
         end
       end
+
 
       describe "<=" do
         it "should pop two arguments and replace them with a pseudoboolean indicating a < b" do

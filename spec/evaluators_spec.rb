@@ -28,9 +28,11 @@ describe "BalancedAccuracyEvaluator" do
     end
 
     it "should raise an exception if any of the records' :group is not in [0,1]" do
-      
+      bad_data = [{x1:2, group:0}, {x1:1, group:2}]
+      lambda{ Snip::BalancedAccuracyEvaluator.new(bad_data) }.should raise_error
     end
   end
+
 
   describe "evaluate" do
     before(:each) do
@@ -38,23 +40,59 @@ describe "BalancedAccuracyEvaluator" do
       @simple_data = [{"x1" => 0, group:0}, {"x1" => 1, group:1}, {"x1" => 2, group:1}]
     end
 
-    it "should write a score to the answer's scores hash" 
+    it "should write a score to the answer's scores hash" do
+      Snip::BalancedAccuracyEvaluator.new(@simple_data).evaluate(@trivial_answer)
+      @trivial_answer.scores[:balanced_accuracy].should_not be_nil
+    end
 
-    it "should run the script once for every row of data"
+    it "should run the script once for every row of data" do
+      scorer = Snip::BalancedAccuracyEvaluator.new(@simple_data)
+      runner = Snip::Interpreter.new(script:@trivial_answer.script)
+      Snip::Interpreter.should_receive(:new).exactly(3).times.and_return(runner)
+      scorer.evaluate(@trivial_answer)
+    end
 
-    it "should collect the top item of the stack every time the script is run"
+    it "should collect the top item of the stack every time the script is run" do
+      scorer = Snip::BalancedAccuracyEvaluator.new(@simple_data)
+      runner = Snip::Interpreter.new(script:@trivial_answer.script)
+      Snip::Interpreter.stub!(:new).and_return(runner)
+      runner.should_receive(:emit!).exactly(3).times
+      scorer.evaluate(@trivial_answer)
+    end
 
-    it "should calculate the median value for each class" 
+    it "should calculate the median value for each class" do
+      scorer = Snip::BalancedAccuracyEvaluator.new(@simple_data)
+      Snip::Evaluator.should_receive(:median).exactly(2).times.and_return(77)
+      scorer.evaluate(@trivial_answer)
+    end
 
-    it "should set the threshold to the mean of those two medians"
+    it "should save a :balanced_accuracy_threshold score in the answer" do
+      scorer = Snip::BalancedAccuracyEvaluator.new(@simple_data)
+      scorer.evaluate(@trivial_answer)
+      @trivial_answer.scores[:balanced_accuracy_cutoff].should == 0.75
+    end
 
-    it "should make generate a prediction for each row based on the mean-of-medians threshold"
+    it "should return the balanced accuracy as ((tp / (tp + fn)) + (tn / (tn + fp))) / 2" do
+      scorer = Snip::BalancedAccuracyEvaluator.new(@simple_data)
+      scorer.evaluate(@trivial_answer)
+      @trivial_answer.scores[:balanced_accuracy].should == 1.0
 
-    it "should return the balanced accuracy as ((tp / (tp + fn)) + (tn / (tn + fp))) / 2"
+      backwards = [{"x1" => 1, group:0}, {"x1" => 0, group:1}, {"x1" => 0, group:1}]
+      Snip::BalancedAccuracyEvaluator.new(backwards).evaluate(@trivial_answer)
+      @trivial_answer.scores[:balanced_accuracy].should == 0.0
+    end
   end
 
 
   describe "Evaluator.median(values)" do
+    it "should raise an exception if there are any nil values in the list" do
+      lambda{ Snip::Evaluator.median([2,3,5,6,88,nil]) }.should raise_error
+    end
+
+    it "should raise an exception if the list is empty" do
+      lambda{ Snip::Evaluator.median([]) }.should raise_error
+    end
+
     it "should return the middle value (after sorting) of an odd-length list" do
       Snip::Evaluator.median([2,3,5,6,88]).should == 5.0
       Snip::Evaluator.median([1,1,1]).should == 1.0
@@ -68,10 +106,6 @@ describe "BalancedAccuracyEvaluator" do
 
     it "should return the only value for a 1-element list" do
       Snip::Evaluator.median([13]).should == 13.0
-    end
-    
-    it "should return nil for an empty list" do
-      Snip::Evaluator.median([]).should == nil
     end
   end
 end
