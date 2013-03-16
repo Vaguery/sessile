@@ -34,6 +34,18 @@ describe "BalancedAccuracyEvaluator" do
   end
 
 
+  describe "BalancedAccuracyEvaluator.from_data_file" do
+    it "should take a file path"
+    it "should open the file"
+    it "should raise an exception if no column is named 'group'"
+    it "should raise an exception if any group measurement is missing"
+    it "should raise an exception if any group measurement is not reported as 0 or 1"
+    it "should read the header row to build the variable names list"
+    it "should create a data hash for every row of the file"
+    it "should return a BalancedAccuracyEvaluator initialized with the data"
+  end
+
+
   describe "evaluate" do
     before(:each) do
       @trivial_answer = Snip::Answer.new("x1")
