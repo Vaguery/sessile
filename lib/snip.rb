@@ -103,7 +103,8 @@ module Snip
       all_values = pos_values + neg_values
       if all_values.include?(nil) || pos_values.empty? || neg_values.empty?
         answer.scores[:balanced_accuracy_cutoff] = nil
-        answer.scores[:balanced_accuracy] = nil
+        answer.scores[:forward_balanced_accuracy] = nil
+        answer.scores[:backward_balanced_accuracy] = nil
       else
         pos_median = Snip::Evaluator.median(pos_values)
         neg_median = Snip::Evaluator.median(neg_values)
@@ -113,7 +114,15 @@ module Snip
         predicted_negatives = apply_threshold_to_predictions(neg_values, threshold)
 
         answer.scores[:balanced_accuracy_cutoff] = threshold
-        answer.scores[:balanced_accuracy] = balanced_accuracy(predicted_positives, predicted_negatives)
+
+        reversed_positives = predicted_positives.collect {|p| 1-p}
+        reversed_negatives = predicted_positives.collect {|p| 1-p}
+
+        forward_threshold_score = balanced_accuracy(predicted_positives, predicted_negatives)
+        backward_threshold_score = balanced_accuracy(reversed_positives, reversed_negatives)
+
+        answer.scores[:forward_balanced_accuracy] = forward_threshold_score
+        answer.scores[:backward_balanced_accuracy] = backward_threshold_score
       end
       return answer
     end
@@ -141,7 +150,7 @@ module Snip
         @steps += 1
          
         if bound_variables.include?(token)
-          @stack.push @bindings[token]
+          @stack.push @bindings[token].to_f
         else
           case token
           when /[-+]?([0-9]*\.[0-9]+|[0-9]+)/
@@ -167,13 +176,13 @@ module Snip
         a,b = @stack.pop(2)
         result = case token
         when "+"
-          a + b
+          a.to_f + b
         when "-"
-          a - b
+          a.to_f - b
         when "*"
-          a * b
+          a.to_f * b
         when "/"
-          b == 0.0 ? 0.0 : a / b
+          b == 0.0 ? 0.0 : a.to_f / b
         end
         @stack.push result
       end

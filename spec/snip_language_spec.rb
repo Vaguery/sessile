@@ -72,6 +72,10 @@ describe "SnipLanguage" do
           Snip::Interpreter.new(script:"1 2 3 +").run.stack.should == [1,5]
         end
 
+        it "should return a float" do
+          Snip::Interpreter.new(script:"1 2 3 +").run.stack[-1].should be_a_kind_of(Float)
+        end
+
         it "should fail if there aren't enough items on the stack" do
           Snip::Interpreter.new(script:"1 +").run.stack.should == [1.0]
           Snip::Interpreter.new(script:"+ 2 3").run.stack.should == [2.0, 3.0]
