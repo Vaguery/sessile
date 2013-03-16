@@ -2,14 +2,48 @@ module Snip
 
   class Answer
     attr_accessor :script
-    attr_reader :context
-    attr_accessor :stack
+    attr_accessor :scores
 
-    def initialize(script = "",context=Array.new)
+    def initialize(script = "")
       @script = script
-      @context = context
-      @stack = Array.new
+      @scores = {}
     end
+  end
+
+
+  class Evaluator
+    def evaluate(answer)
+      answer.scores[:generic] = nil
+    end
+  end
+
+
+  class AccuracyEvaluator < Evaluator
+    attr_reader :data
+
+    def initialize(data)
+      @data = data
+    end
+
+    def evaluate(answer)
+      results = @data.collect do |row|
+        executed = Snip::Interpreter.new(script:(answer.script),bindings:row).run
+        executed.emit!
+      end
+      answer.scores[:accuracy] = 5.5
+    end
+
+#   Evaluate the solution for each case and each control. 
+#   Find the median of the case values and the median of the control values.  
+#   The mean of these two values will be the threshold, but we test four possible 
+#   relations to the threshold to see which will produce the best balanced accuracy.  
+#   The four relations are <, <=, >=, >. 
+#   Balanced accuracy is ((tp / (tp + fn)) + (tn / (tn + fp))) / 2, where
+#     tp = true positive
+#     tn = true negative
+#     fp = false positive
+#     fn = false negative
+
   end
 
 
@@ -47,6 +81,10 @@ module Snip
         end
       end
       return self
+    end
+
+    def emit!
+      return @stack.pop
     end
 
 
