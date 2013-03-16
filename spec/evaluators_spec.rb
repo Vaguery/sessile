@@ -35,14 +35,30 @@ describe "BalancedAccuracyEvaluator" do
 
 
   describe "BalancedAccuracyEvaluator.from_data_file" do
-    it "should take a file path"
-    it "should open the file"
-    it "should raise an exception if no column is named 'group'"
+    it "should take a file path" do
+      lambda{ Snip::BalancedAccuracyEvaluator.from_data_file }.should raise_error(ArgumentError)
+    end
+
+    it "should raise an exception if no column is named 'group'" do
+      path = './spec/fixtures/no_group_column.csv'
+      lambda{ Snip::BalancedAccuracyEvaluator.from_data_file(path) }.should raise_error(ArgumentError)
+    end
+
     it "should raise an exception if any group measurement is missing"
+
     it "should raise an exception if any group measurement is not reported as 0 or 1"
-    it "should read the header row to build the variable names list"
-    it "should create a data hash for every row of the file"
-    it "should return a BalancedAccuracyEvaluator initialized with the data"
+    
+    it "should read the header row to build the variable names list" do
+      path = './spec/fixtures/five_columns.csv'
+      evaluator = Snip::BalancedAccuracyEvaluator.from_data_file(path)
+      evaluator.data[-1].keys.should == ["X1", "X2", "X3", "X4", "X5", :group]
+    end
+
+    it "should create a data hash for every row of the file" do
+      path = './spec/fixtures/five_columns.csv'
+      evaluator = Snip::BalancedAccuracyEvaluator.from_data_file(path)
+      evaluator.data.length.should == 4
+    end
   end
 
 

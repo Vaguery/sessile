@@ -33,6 +33,13 @@ module Snip
       return result
     end
   end
+
+
+  class EvaluatorError < StandardError
+    def initialize(msg = "data file missing 'group' column")
+      super(msg)
+    end
+  end
   
   
   class BalancedAccuracyEvaluator < Evaluator
@@ -49,6 +56,18 @@ module Snip
       end
       @data = data
       @positive_examples, @negative_examples = @data.partition {|r| r[:group] == 1}
+    end
+
+    def self.from_data_file(path)
+      require 'csv'
+      rows = []
+      CSV.foreach(path, headers:true, converters: :numeric) do |file_row|
+        row = file_row.to_hash
+        row[:group] = row["group"]
+        row.delete("group")
+        rows << row
+      end
+      return BalancedAccuracyEvaluator.new(rows)
     end
     
     
