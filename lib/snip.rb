@@ -15,6 +15,20 @@ module Snip
     def evaluate(answer)
       answer.scores[:generic] = nil
     end
+
+    def self.median(numbers)
+      sorted = numbers.compact.sort
+      count = sorted.length
+      result = case 
+      when sorted.empty?
+        nil
+      when count.even?
+        (sorted[count/2 - 1].to_f + sorted[count/2]) / 2.0
+      else
+        sorted[count/2].to_f
+      end
+      return result
+    end
   end
 
 
@@ -26,14 +40,45 @@ module Snip
     end
 
     def evaluate(answer)
-      results = @data.collect do |row|
+      results = []
+      @data.each_with_index do |row,idx|
         executed = Snip::Interpreter.new(script:(answer.script),bindings:row).run
-        executed.emit!
+        positive = (row[:group] == 1) || false
+        result = executed.emit!
+        results.push({index:idx, positive:positive, emitted:result})
       end
-      answer.scores[:accuracy] = 5.5
+
+      positives, negatives = results.partition {|r| r[:positive]}
+      median_0 = Evaluator.median(negatives.collect {|r| r[:emitted]})
+      median_1 = Evaluator.median(positives.collect {|r| r[:emitted]})
+      
+      if median_0.nil? || median_1.nil?
+        answer.scores[:accuracy] = nil
+      else
+        threshold = (median_0 + median_1)/2.0
+        true_pos, true_neg, false_pos, false_neg = 0,0,0,0
+        results.each do |r| 
+          r[:predicted] = r[:emitted] < threshold ? 0 : 1
+          case 
+          when r[:predicted] && r[:positive]
+            true_pos += 1
+          when r[:predicted] && !r[:positive]
+            false_pos += 1
+          when !r[:predicted] && r[:positive]
+            false_neg += 1
+          else
+            true_neg += 1
+          end
+        end
+        answer.scores[:accuracy] = 
+          ((true_pos / (true_pos + false_neg)) + (true_neg / (true_neg + false_pos))) / 2
+      end
+
+      puts answer.scores.inspect
     end
 
-#   Evaluate the solution for each case and each control. 
+
+    #   Evaluate the solution for each case and each control. 
 #   Find the median of the case values and the median of the control values.  
 #   The mean of these two values will be the threshold, but we test four possible 
 #   relations to the threshold to see which will produce the best balanced accuracy.  
@@ -43,6 +88,7 @@ module Snip
 #     tn = true negative
 #     fp = false positive
 #     fn = false negative
+
 
   end
 
