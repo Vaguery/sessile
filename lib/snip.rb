@@ -32,64 +32,23 @@ module Snip
   end
 
 
-  class AccuracyEvaluator < Evaluator
+  class BalancedAccuracyEvaluator < Evaluator
     attr_reader :data
+    attr_reader :positive_examples
+    attr_reader :negative_examples
 
     def initialize(data)
+      data.each do |r|
+        raise ArgumentError.new("A record has no :group assigned") if r[:group].nil?
+        raise ArgumentError.new("A record as a :group assigned that is not 0 or 1") unless 
+          [0,1].include? r[:group]
+      end
       @data = data
+      @positive_examples, @negative_examples = @data.partition {|r| r[:group] == 1}
     end
 
     def evaluate(answer)
-      results = []
-      @data.each_with_index do |row,idx|
-        executed = Snip::Interpreter.new(script:(answer.script),bindings:row).run
-        positive = (row[:group] == 1) || false
-        result = executed.emit!
-        results.push({index:idx, positive:positive, emitted:result})
-      end
-
-      positives, negatives = results.partition {|r| r[:positive]}
-      median_0 = Evaluator.median(negatives.collect {|r| r[:emitted]})
-      median_1 = Evaluator.median(positives.collect {|r| r[:emitted]})
-      
-      if median_0.nil? || median_1.nil?
-        answer.scores[:accuracy] = nil
-      else
-        threshold = (median_0 + median_1)/2.0
-        true_pos, true_neg, false_pos, false_neg = 0,0,0,0
-        results.each do |r| 
-          r[:predicted] = r[:emitted] < threshold ? 0 : 1
-          case 
-          when r[:predicted] && r[:positive]
-            true_pos += 1
-          when r[:predicted] && !r[:positive]
-            false_pos += 1
-          when !r[:predicted] && r[:positive]
-            false_neg += 1
-          else
-            true_neg += 1
-          end
-        end
-        answer.scores[:accuracy] = 
-          ((true_pos / (true_pos + false_neg)) + (true_neg / (true_neg + false_pos))) / 2
-      end
-
-      puts answer.scores.inspect
     end
-
-
-    #   Evaluate the solution for each case and each control. 
-#   Find the median of the case values and the median of the control values.  
-#   The mean of these two values will be the threshold, but we test four possible 
-#   relations to the threshold to see which will produce the best balanced accuracy.  
-#   The four relations are <, <=, >=, >. 
-#   Balanced accuracy is ((tp / (tp + fn)) + (tn / (tn + fp))) / 2, where
-#     tp = true positive
-#     tn = true negative
-#     fp = false positive
-#     fn = false negative
-
-
   end
 
 

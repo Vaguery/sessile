@@ -1,36 +1,48 @@
 require 'spec_helper'
 
-describe "accuracy evaluation" do
+describe "BalancedAccuracyEvaluator" do
   describe "initialization" do
     it "should accept a dataset as an argument" do
-      simple_data = [{"x1" => 2}]
-      Snip::AccuracyEvaluator.new(simple_data).data.should == simple_data
+      one_datum = [{"x1" => 2, group:1}]
+      Snip::BalancedAccuracyEvaluator.new(one_datum).data.should == one_datum
+    end
+
+    it "should split the dataset into positive and negative example subsets" do
+      simple_data = [{x1:2, group:0}, {x1:1, group:1}]
+      simpleEvaluator = Snip::BalancedAccuracyEvaluator.new(simple_data)
+      simpleEvaluator.positive_examples.length.should == 1
+      simpleEvaluator.negative_examples.length.should == 1
+      simpleEvaluator.data.length.should == 2
+    end
+
+    it "should raise an exception if any of the records don't have a :group assigned" do
+      bad_data = [{x1:2, group:0}, {x1:1, group:nil}]
+      lambda{ Snip::BalancedAccuracyEvaluator.new(bad_data) }.should raise_error
+    end
+
+    it "should raise an exception if any of the records don't have a :group key" do
+      bad_data = [{x1:2, group:0}, {x1:1, :class => 1}]
+      lambda{ Snip::BalancedAccuracyEvaluator.new(bad_data) }.should raise_error
+      other_bad_data = [{x1:2, group:0}, {x1:1, "group" => 1}]
+      lambda{ Snip::BalancedAccuracyEvaluator.new(other_bad_data) }.should raise_error
+    end
+
+    it "should raise an exception if any of the records' :group is not in [0,1]" do
+      
     end
   end
 
   describe "evaluate" do
     before(:each) do
       @trivial_answer = Snip::Answer.new("x1")
-      @simple_data = [{"x1" => 0, "class" => 0}, {"x1" => 1, "class" => 1}, {"x1" => 2, "class" => 1}]
+      @simple_data = [{"x1" => 0, group:0}, {"x1" => 1, group:1}, {"x1" => 2, group:1}]
     end
 
-    it "should write a score to the answer's scores hash" do
-      Snip::AccuracyEvaluator.new([]).evaluate(@trivial_answer)
-      @trivial_answer.scores.keys.should == [:accuracy]
-    end
+    it "should write a score to the answer's scores hash" 
 
-    it "should run the script once for every row of data" do
-      thud = Snip::Interpreter.new(script:"x1",bindings:{})
-      Snip::Interpreter.should_receive(:new).exactly(3).times.and_return(thud)
-      Snip::AccuracyEvaluator.new(@simple_data).evaluate(@trivial_answer)
-    end
+    it "should run the script once for every row of data"
 
-    it "should collect the top item of the stack every time the script is run" do
-      thud = Snip::Interpreter.new(script:"x1",bindings:{})
-      Snip::Interpreter.stub(:new).and_return(thud)
-      thud.should_receive(:emit!).exactly(3).times
-      Snip::AccuracyEvaluator.new(@simple_data).evaluate(@trivial_answer)
-    end
+    it "should collect the top item of the stack every time the script is run"
 
     it "should calculate the median value for each class" 
 
