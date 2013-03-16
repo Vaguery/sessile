@@ -115,11 +115,8 @@ module Snip
 
         answer.scores[:balanced_accuracy_cutoff] = threshold
 
-        reversed_positives = predicted_positives.collect {|p| 1-p}
-        reversed_negatives = predicted_positives.collect {|p| 1-p}
-
         forward_threshold_score = balanced_accuracy(predicted_positives, predicted_negatives)
-        backward_threshold_score = balanced_accuracy(reversed_positives, reversed_negatives)
+        backward_threshold_score = 1.0 - forward_threshold_score
 
         answer.scores[:forward_balanced_accuracy] = forward_threshold_score
         answer.scores[:backward_balanced_accuracy] = backward_threshold_score

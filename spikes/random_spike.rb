@@ -13,9 +13,9 @@ end
 File.open("./random_spike.out", "w") do |output_file|
   output_file.puts "t,forward_score,backward_score,tokens,script"
   max = 0.0
-  100.times do |step|
+  100000.times do |step|
     new_max = false
-    tokens = rand(30) + 10
+    tokens = rand(50) + 10
     answer = Snip::Answer.new(random_script(tokens))
     evaluator.evaluate(answer)
     if answer.scores[:forward_balanced_accuracy] >= max || answer.scores[:backward_balanced_accuracy] >= max
