@@ -68,9 +68,10 @@ describe "BalancedAccuracyEvaluator" do
       @simple_data = [{"x1" => 0, group:0}, {"x1" => 1, group:1}, {"x1" => 2, group:1}]
     end
 
-    it "should write a score to the answer's scores hash" do
+    it "should write two scores to the answer's scores hash" do
       Snip::BalancedAccuracyEvaluator.new(@simple_data).evaluate(@trivial_answer)
-      @trivial_answer.scores[:balanced_accuracy].should_not be_nil
+      @trivial_answer.scores[:forward_balanced_accuracy].should_not be_nil
+      @trivial_answer.scores[:backward_balanced_accuracy].should_not be_nil
     end
 
     it "should run the script once for every row of data" do
@@ -103,11 +104,14 @@ describe "BalancedAccuracyEvaluator" do
     it "should return the balanced accuracy as ((tp / (tp + fn)) + (tn / (tn + fp))) / 2" do
       scorer = Snip::BalancedAccuracyEvaluator.new(@simple_data)
       scorer.evaluate(@trivial_answer)
-      @trivial_answer.scores[:balanced_accuracy].should == 1.0
+      @trivial_answer.scores[:forward_balanced_accuracy].should == 1.0
+      @trivial_answer.scores[:backward_balanced_accuracy].should == 0.0
+
 
       backwards = [{"x1" => 1, group:0}, {"x1" => 0, group:1}, {"x1" => 0, group:1}]
       Snip::BalancedAccuracyEvaluator.new(backwards).evaluate(@trivial_answer)
-      @trivial_answer.scores[:balanced_accuracy].should == 0.0
+      @trivial_answer.scores[:forward_balanced_accuracy].should == 0.0
+      @trivial_answer.scores[:backward_balanced_accuracy].should == 1.0
     end
   end
 
