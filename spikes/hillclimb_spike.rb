@@ -37,7 +37,7 @@ end
 
     output_file.puts "t,mutation_rate,change_rate,silent_rate,improvement_rate,current_score,current_script,current_wtf,mutant_score,mutant_script,mutant_wtf"
 
-    answer = Snip::Answer.new(random_script(40))
+    answer = Snip::Answer.new(random_script(60))
     evaluator.evaluate(answer)
     answer_score = [answer.scores[:forward_balanced_accuracy],answer.scores[:backward_balanced_accuracy]].max
     answer_wtf = Snip::Interpreter.new(script:answer.script).wtf.inspect
@@ -73,7 +73,6 @@ end
         change_ma = change_records.count(true).to_f/change_records.length
         silent_ma = silent_records.count(true).to_f/silent_records.length
         improvement_ma = improvement_records.count(true).to_f/improvement_records.length
-        # p [change_ma,improvement_ma]
 
         output_file.puts "#{climb_length*start + step},#{mutation_rate},#{change_ma.round(5)},#{silent_ma.round(5)},#{improvement_ma.round(5)},#{answer_score},#{answer.script.inspect},#{answer_wtf},#{mutant_score},#{mutant.script.inspect},#{mutant_wtf}"
       end
