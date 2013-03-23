@@ -44,7 +44,7 @@ end
     
     output_file.puts "0,#{mutation_rate},1.0,1.0,1.0,#{answer_score},#{answer.script.inspect},#{answer_wtf},,"
 
-    400.times do |start|
+    200.times do |start|
       p "mutation rate: #{mutation_rate.round(5)}, best score: #{answer_score.round(5)}, best model: #{answer_wtf.delete('"')}"
       climb_length.times do |step|
         mutant = mutant_from_script(answer.script,mutation_rate)
