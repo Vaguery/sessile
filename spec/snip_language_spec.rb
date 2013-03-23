@@ -194,6 +194,33 @@ describe "SnipLanguage" do
         end
       end
     end
+
+  describe "wtf" do
+    it "should generate a string result from the script input" do
+      Snip::Interpreter.new(script:"1 2 3 ==").wtf.should be_a_kind_of(String)
+    end
+
+    it "should produce a parenthesized human-readable string for basic operations" do
+      Snip::Interpreter.new(script:"1 2 +").wtf.should == "(1 + 2)"
+      Snip::Interpreter.new(script:"1 2 - ").wtf.should == "(1 - 2)"
+      Snip::Interpreter.new(script:"1 2 * ").wtf.should == "(1 * 2)"
+      Snip::Interpreter.new(script:"1 2 / ").wtf.should == "(1 / 2)"
+      Snip::Interpreter.new(script:"1 2 ==").wtf.should == "(1 == 2)"
+      Snip::Interpreter.new(script:"1 2 < ").wtf.should == "(1 < 2)"
+      Snip::Interpreter.new(script:"1 2 > ").wtf.should == "(1 > 2)"
+      Snip::Interpreter.new(script:"1 2 <=").wtf.should == "(1 <= 2)"
+      Snip::Interpreter.new(script:"1 2 >=").wtf.should == "(1 >= 2)"
+    end
+
+    it "should work assume any unrecognized token is a variable name" do
+      Snip::Interpreter.new(script:"foo bar + 3.3 -").wtf.should == "((foo + bar) - 3.3)"
+    end
+
+    it "should only return the topmost item from the stack" do
+      Snip::Interpreter.new(script:"1 2 + 3 4 * 5 6 1.1 2.2 + + 9 *").wtf.should == "((6 + (1.1 + 2.2)) * 9)"
+    end
+
   end
 
+  end
 end

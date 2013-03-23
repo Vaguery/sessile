@@ -163,6 +163,38 @@ module Snip
     end
 
 
+    def wtf
+      @stack = []
+      bound_variables = @bindings.keys
+      tokens = @script.split
+      tokens.each do |token|
+        @steps += 1
+         
+        if bound_variables.include?(token)
+          @stack.push token
+        else
+          case token
+          when /[-+]?([0-9]*\.[0-9]+|[0-9]+)/
+            @stack.push token
+          when "+","*","-","/","==", "<", ">", ">=", "<="
+            @stack.push wtf_arity_2(token)
+          else
+            @stack.push token
+          end
+        end
+      end
+      self.emit! 
+    end
+
+
+    def wtf_arity_2(operator)
+      if @stack.length > 1
+        a,b = stack.pop(2)
+        "(#{a} #{operator} #{b})"
+      end
+    end
+
+
     def emit!
       return @stack.pop
     end
