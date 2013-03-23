@@ -217,7 +217,7 @@ describe "SnipLanguage" do
     end
 
     it "should only return the topmost item from the stack" do
-      Snip::Interpreter.new(script:"1 2 + 3 4 * 5 6 1.1 2.2 + + 9 *").wtf.should == "((6 + (1.1 + 2.2)) * 9)"
+      Snip::Interpreter.new(script:"1 2 + 3 4 * 5 6 1.1 -2.2 + + 9 *").wtf.should == "((6 + (1.1 + -2.2)) * 9)"
     end
 
   end

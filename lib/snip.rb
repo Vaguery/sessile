@@ -175,9 +175,9 @@ module Snip
         else
           case token
           when /[-+]?([0-9]*\.[0-9]+|[0-9]+)/
-            @stack.push token
+            @stack.push token.to_s
           when "+","*","-","/","==", "<", ">", ">=", "<="
-            @stack.push wtf_arity_2(token)
+            wtf_arity_2(token)
           else
             @stack.push token
           end
@@ -190,7 +190,7 @@ module Snip
     def wtf_arity_2(operator)
       if @stack.length > 1
         a,b = stack.pop(2)
-        "(#{a} #{operator} #{b})"
+        @stack.push  "(#{a} #{operator} #{b})"
       end
     end
 
